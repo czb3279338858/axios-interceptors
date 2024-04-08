@@ -7,7 +7,7 @@ merge(selfAxios.defaults, {
     common: {
       Appcode: 'MTDS',
       Subappcode: 'MTDSPC001',
-      "Oauth2-Accesstoken": '4a1ca82d309f80ea70456fa43cb1b8f5u'
+      "Oauth2-Accesstoken": '52c540d52785638dc347dc15338eae0cu'
     }
   },
   baseURL: 'https://apigatewayuat.oppein.com'
@@ -51,15 +51,21 @@ function getCurrentUser() {
   })
 }
 export async function reqGetDetailByIds(ids: string[]) {
-  return selfAxios.post('/bsplatform/commodity/getDetailByIds', ids)
+  return selfAxios.post('/quotation/designQuotationExportController/exportDesignQuotationDetailByQuotationId', { id: 1777184063947182081 }, {
+    responseType: 'blob',
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  })
 }
 async function init() {
-  getCurrentUser().then(r => console.log(1, r))
-  const r = await getCurrentUser()
-  console.log(2, r)
-  getCurrentUser().then(r => console.log(3, r))
-  const r1 = await getCurrentUser()
-  console.log(4, r1)
+  // getCurrentUser().then(r => console.log(1, r))
+  // const r = await getCurrentUser()
+  // console.log(2, r)
+  // getCurrentUser().then(r => console.log(3, r))
+  // const r1 = await getCurrentUser()
+  // console.log(4, r1)
+  await reqGetDetailByIds(['1888453677539270656'])
   reqGetDetailByIds(['1888453677539270656'])
 }
 init()
