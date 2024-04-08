@@ -22,7 +22,7 @@
   "repository": "https://github.com/czb3279338858/axios-interceptor/tree/3.0",
   "devDependencies": {
     "@types/lodash-es": "^4.17.12",
-    "typescript": "^5.3.3",
+    "typescript": "^5.4.3",
     "vite": "^5.0.10",
     "vite-plugin-dts": "^3.7.2",
     "axios": "^1"
