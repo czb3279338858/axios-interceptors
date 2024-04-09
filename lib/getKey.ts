@@ -12,15 +12,19 @@ function getData(config: InternalAxiosRequestConfig) {
     return JSON.stringify(dataObj)
   }
   if (isObject(data)) {
-    const formData = new FormData()
-    Object.keys(data).forEach(key => {
-      formData.append(key, data[key])
-    })
-    let dataObj: Record<string, any> = {}
-    formData.forEach((v, k) => {
-      dataObj[k] = v
-    })
-    return JSON.stringify(dataObj)
+    if (config.headers['Content-Type'] === 'multipart/form-data') {
+      const formData = new FormData()
+      Object.keys(data).forEach(key => {
+        formData.append(key, data[key])
+      })
+      let dataObj: Record<string, any> = {}
+      formData.forEach((v, k) => {
+        dataObj[k] = v
+      })
+      return JSON.stringify(dataObj)
+    } else {
+      return JSON.stringify(data)
+    }
   }
   return data
 
