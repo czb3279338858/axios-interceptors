@@ -209,7 +209,7 @@ export function useInterceptor(arg: UseInterceptorArg) {
         err.response = {
           data: undefined,
           status: 599,
-          statusText: '没有响应体',
+          statusText: `没有响应体，响应原始信息：${err.message}`,
           headers: err.config.headers,
           config: err.config,
           request: err.request
