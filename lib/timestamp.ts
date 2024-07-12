@@ -10,7 +10,11 @@ export function useTimestampInterceptor(arg: TimestampInterceptorArg) {
   paramsExcludeKey.push(timestampKey)
   axios.interceptors.request.use(function (config): InternalAxiosRequestConfig {
     if (config.method?.toUpperCase() === 'GET') {
-      config.params[timestampKey] = new Date().getTime()
+      if (config.params) {
+        config.params[timestampKey] = new Date().getTime()
+      } else {
+        config.params = { [timestampKey]: new Date().getTime() }
+      }
       return config
     }
     return config
