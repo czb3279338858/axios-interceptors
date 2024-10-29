@@ -2,14 +2,22 @@ import { InternalAxiosRequestConfig } from "axios";
 import { cloneDeep, isObject } from "lodash-es";
 
 export const paramsExcludeKey: string[] = []
+
+function objectToFormUrlEncoded(obj: Record<string, any>) {
+  return Object.keys(obj).map(key => `${encodeURIComponent(key)}=${encodeURIComponent(obj[key])}`).join('&');
+}
 function getData(config: InternalAxiosRequestConfig) {
   let data: FormData | undefined | string | Record<string, any> = config.data
+  // 'Content-Type': 'application/x-www-form-urlencoded'
+  if (typeof data === 'string') {
+    return data
+  }
   if (data instanceof FormData) {
     let dataObj: Record<string, any> = {}
     data.forEach((v, k) => {
       dataObj[k] = v
     })
-    return JSON.stringify(dataObj)
+    return objectToFormUrlEncoded(dataObj)
   }
   if (isObject(data)) {
     if (config.headers['Content-Type'] === 'multipart/form-data') {
@@ -21,9 +29,9 @@ function getData(config: InternalAxiosRequestConfig) {
       formData.forEach((v, k) => {
         dataObj[k] = v
       })
-      return JSON.stringify(dataObj)
+      return objectToFormUrlEncoded(dataObj)
     } else {
-      return JSON.stringify(data)
+      return objectToFormUrlEncoded(data)
     }
   }
   return data
