@@ -7,10 +7,13 @@ function objectToFormUrlEncoded(obj: Record<string, any>) {
   return Object.keys(obj).map(key => `${encodeURIComponent(key)}=${encodeURIComponent(obj[key])}`).join('&');
 }
 function getData(config: InternalAxiosRequestConfig) {
+  // string有可能是 json 也有可能是 application/x-www-form-urlencoded
   let data: FormData | undefined | string | Record<string, any> = config.data
-  // 'Content-Type': 'application/x-www-form-urlencoded'
   if (typeof data === 'string') {
-    return data
+    if (config.headers['Content-Type'] === 'application/json') {
+      data = JSON.parse(data)
+      // 'Content-Type': 'application/x-www-form-urlencoded'
+    } else return data
   }
   if (data instanceof FormData) {
     let dataObj: Record<string, any> = {}
@@ -31,7 +34,8 @@ function getData(config: InternalAxiosRequestConfig) {
       })
       return objectToFormUrlEncoded(dataObj)
     } else {
-      return objectToFormUrlEncoded(data)
+      const ret = objectToFormUrlEncoded(data)
+      return ret
     }
   }
   return data
