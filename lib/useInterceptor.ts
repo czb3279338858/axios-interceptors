@@ -176,6 +176,10 @@ export function useInterceptor(arg: UseInterceptorArg) {
         if (debounceParams) {
           debounceParams.resolve(resolveResponse)
           debounceMap.delete(key)
+        } else {
+          console.log('找不到请求对应key')
+          console.log(key)
+          console.log(debounceMap)
         }
       }
       if (useCache && isSuccess(response)) {

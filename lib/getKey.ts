@@ -1,46 +1,37 @@
 import { InternalAxiosRequestConfig } from "axios";
-import { cloneDeep, isObject } from "lodash-es";
+import { cloneDeep } from "lodash-es";
 
 export const paramsExcludeKey: string[] = []
 
-function objectToFormUrlEncoded(obj: Record<string, any>) {
-  return Object.keys(obj).map(key => `${encodeURIComponent(key)}=${encodeURIComponent(obj[key])}`).join('&');
-}
-function getData(config: InternalAxiosRequestConfig) {
-  // string有可能是 json 也有可能是 application/x-www-form-urlencoded
-  let data: FormData | undefined | string | Record<string, any> = config.data
-  if (typeof data === 'string') {
-    if (config.headers['Content-Type'] === 'application/json') {
-      data = JSON.parse(data)
-      // 'Content-Type': 'application/x-www-form-urlencoded'
-    } else return data
-  }
-  if (data instanceof FormData) {
-    let dataObj: Record<string, any> = {}
-    data.forEach((v, k) => {
-      dataObj[k] = v
-    })
-    return objectToFormUrlEncoded(dataObj)
-  }
-  if (isObject(data)) {
-    if (config.headers['Content-Type'] === 'multipart/form-data') {
-      const formData = new FormData()
-      Object.keys(data).forEach(key => {
-        formData.append(key, data[key])
-      })
-      let dataObj: Record<string, any> = {}
-      formData.forEach((v, k) => {
-        dataObj[k] = v
-      })
-      return objectToFormUrlEncoded(dataObj)
-    } else {
-      const ret = objectToFormUrlEncoded(data)
-      return ret
-    }
-  }
-  return data
+function objectToFormUrlEncoded(obj: Record<string, any>): string {
+  const params = new URLSearchParams();
 
+  // 添加数据到 params 对象中
+  for (const key in obj) {
+    params.append(key, obj[key]);
+  }
+  return params.toString()
 }
+
+function getData(config: InternalAxiosRequestConfig): string {
+  const { transformRequest, data, headers } = config
+  // 请求中
+  if (!config._requestId) {
+    if (Array.isArray(transformRequest)) {
+      const ret = transformRequest.reduce<any>((p, c, index) => {
+        if (index === 0) p = c.call(config, data, headers)
+        return p
+      }, null)
+      return JSON.stringify(ret)
+    } else {
+      const ret = transformRequest?.call(config, data, headers) || data
+      return JSON.stringify(ret)
+    }
+  } else {
+    return JSON.stringify(data)
+  }
+}
+
 export function innerGetKey(config: InternalAxiosRequestConfig) {
   const url = new URL(config.url!, config.baseURL);
   const fullURL = url.protocol + '//' + url.hostname + url.pathname;

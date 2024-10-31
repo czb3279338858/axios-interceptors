@@ -7,7 +7,7 @@ merge(selfAxios.defaults, {
     common: {
       Appcode: 'MTDS',
       Subappcode: 'MTDSPC001',
-      "Oauth2-Accesstoken": '52c540d52785638dc347dc15338eae0cu'
+      "Oauth2-Accesstoken": '653a4c82ceb5cb240727737c8c7b564au'
     }
   },
   baseURL: 'https://apigatewayuat.oppein.com'
@@ -40,32 +40,33 @@ const {
   }
 })
 
-function getCurrentUser() {
+function getJson() {
   return selfAxios.get('/ucenterapi/uc/internal/common/getCurrentUser', {
     params: {
       platformType: 'MTDS'
-    },
-    _cache: true,
-    _delCache: (cacheMap) => {
     }
   })
 }
-export async function reqGetDetailByIds(ids: string[]) {
-  return selfAxios.post('/quotation/designQuotationExportController/exportDesignQuotationDetailByQuotationId', { id: 1777184063947182081 }, {
-    responseType: 'blob',
+export async function postFormData() {
+  return selfAxios.post('/quotation/designQuotationExportController/exportDesignQuotationDetailByQuotationId', { id: 1777184063947182081, other: [1, { a: 2 }] }, {
     headers: {
       'Content-Type': 'multipart/form-data'
     }
   })
 }
+export async function postUrlencoded() {
+  return selfAxios.post('/mtdsaccount/account-quotation/getVipBillingItemByOrgNo', { orgNo: 's000044', other: [1, { a: 2 }] }, {
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    }
+  })
+}
 async function init() {
-  // getCurrentUser().then(r => console.log(1, r))
-  // const r = await getCurrentUser()
-  // console.log(2, r)
-  // getCurrentUser().then(r => console.log(3, r))
-  // const r1 = await getCurrentUser()
-  // console.log(4, r1)
-  await reqGetDetailByIds(['1888453677539270656'])
-  reqGetDetailByIds(['1888453677539270656'])
+  await getJson()
+  await getJson()
+  await postFormData()
+  await postFormData()
+  await postUrlencoded()
+  await postUrlencoded()
 }
 init()
