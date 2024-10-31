@@ -3,15 +3,7 @@ import { cloneDeep } from "lodash-es";
 
 export const paramsExcludeKey: string[] = []
 
-function objectToFormUrlEncoded(obj: Record<string, any>): string {
-  const params = new URLSearchParams();
 
-  // 添加数据到 params 对象中
-  for (const key in obj) {
-    params.append(key, obj[key]);
-  }
-  return params.toString()
-}
 
 function getData(config: InternalAxiosRequestConfig): string {
   const { transformRequest, data, headers } = config
