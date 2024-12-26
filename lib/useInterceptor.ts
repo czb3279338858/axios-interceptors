@@ -208,17 +208,6 @@ export function useInterceptor(arg: UseInterceptorArg) {
     if (_requestId) {
       const resolveErr = cloneDeep(err)
 
-      // 接口504响应，err.response为undefined
-      if (!err.response) {
-        err.response = {
-          data: undefined,
-          status: 599,
-          statusText: `没有响应体，响应原始信息：${err.message}`,
-          headers: err.config.headers,
-          config: err.config,
-          request: err.request
-        }
-      }
       // 允许重试，重试的config带有_requestId
       if (useRetry && err.response && isRetry(err.response)) {
         retryConfigs.add(err.config)
