@@ -1,7 +1,7 @@
 {
   "name": "axios-interceptor",
   "description": "axios interceptor can implement features such as response data caching, deduplication of identical requests, adding timestamps to get requests, re-initiating failed requests, and listening for changes in the queue of pending requests.",
-  "version": "3.0.19",
+  "version": "3.0.20",
   "type": "module",
   "files": [
     "dist"
