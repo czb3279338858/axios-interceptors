@@ -87,7 +87,7 @@ export function useInterceptor(arg: UseInterceptorArg) {
   const retryConfigs = new Set<AxiosRequestConfig>()
 
   axios.interceptors.request.use(config => {
-    // 重试时有_requestId
+    // 重试时有_requestId，直接发起请求
     if (config._requestId) {
       const realConfig = cloneDeep(config)
       newAxios.request(realConfig)
@@ -122,19 +122,17 @@ export function useInterceptor(arg: UseInterceptorArg) {
       }
     }
 
-    // 设置id
+    // 设置id，发起真实请求
     const realConfig = cloneDeep(config)
     realConfig._requestId = requestId
-
     // 给真实请求添加时间戳
     if (useTimestamp && realConfig.method?.toUpperCase() === 'GET') {
       realConfig.params ? (realConfig.params[timestampKey] = new Date().getTime()) : (realConfig.params = { [timestampKey]: new Date().getTime() })
     }
-
     // 发起真实请求
     newAxios.request(realConfig)
 
-    // 发起请求的接口设置回调
+    // 储存响应的resolve,reject,promise
     let resolve
     let reject
     const promise = new Promise<AxiosResponse<unknown, unknown>>((res, rej) => {
@@ -169,9 +167,12 @@ export function useInterceptor(arg: UseInterceptorArg) {
         retryConfigs.add(response.config)
         return response
       }
+
       const resolveResponse = cloneDeep(response)
       delete resolveResponse.config._requestId
       const key = getKey(response.config)
+
+      // 删除去抖动列表
       if (useDebounce && !response.config._noDebounce) {
         const debounceParams = debounceMap.get(key)
         // 响应debounce
@@ -183,6 +184,7 @@ export function useInterceptor(arg: UseInterceptorArg) {
           console.log(debounceMap)
         }
       }
+      // 缓存响应，提供删除缓存的方法
       if (useCache && isSuccess(response)) {
         // 响应cache
         if (response.config._cache) {
@@ -193,7 +195,8 @@ export function useInterceptor(arg: UseInterceptorArg) {
           response.config._delCache(cacheMap)
         }
       }
-      // 响应真实请求列表
+
+      // 响应真实请求列表，去抖动列表使用的是同一个Promise，都会被相应到
       const real = realMap.get(_requestId)
       if (real) {
         real.resolve(resolveResponse)
@@ -209,13 +212,13 @@ export function useInterceptor(arg: UseInterceptorArg) {
     if (_requestId) {
       const resolveErr = cloneDeep(err)
 
-      // 允许重试，重试的config带有_requestId
+      // 允许重试，重试的config带有_requestId，realMap和debounceMap都保留，不再走正常流程
       if (useRetry && err.response && isRetry(err.response)) {
         retryConfigs.add(err.config)
         return err
       }
 
-      // 不允许重试
+      // 正常流程
       const real = realMap.get(_requestId)
       delete resolveErr.config?._requestId
       // 响应真实请求
