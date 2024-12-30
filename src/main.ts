@@ -2,12 +2,19 @@ import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios'
 import { useInterceptor } from '../lib/main'
 import { merge } from 'lodash-es'
 const selfAxios = axios.create()
+
+window.addEventListener('unhandledrejection', (e) => {
+  if (e.reason instanceof AxiosError) {
+    debugger
+    return
+  }
+})
 merge(selfAxios.defaults, {
   headers: {
     common: {
       Appcode: 'MTDS',
       Subappcode: 'MTDSPC001',
-      "Oauth2-Accesstoken": '653a4c82ceb5cb240727737c8c7b564au'
+      "Oauth2-Accesstoken": '62c8034f077826ae338e0b175c088beeu'
     }
   },
   baseURL: 'https://apigatewayuat.oppein.com'
@@ -40,12 +47,13 @@ const {
   }
 })
 
-function getJson() {
-  return selfAxios.get('/ucenterapi/uc/internal/common/getCurrentUser', {
+async function getJson(index: number) {
+  const res = await selfAxios.get('/ucenterapi/uc/internal/common/getCurrentUser', {
     params: {
-      platformType: 'MTDS'
+      platformType: 'MTDS',
     }
   })
+  console.log(res, index)
 }
 export async function postFormData() {
   return selfAxios.post('/quotation/designQuotationExportController/exportDesignQuotationDetailByQuotationId', { id: 1777184063947182081, other: [1, { a: 2 }] }, {
@@ -62,11 +70,11 @@ export async function postUrlencoded() {
   })
 }
 async function init() {
-  await getJson()
-  await getJson()
-  await postFormData()
-  await postFormData()
-  await postUrlencoded()
-  await postUrlencoded()
+  getJson(1)
+  // await getJson(2)
+  // await postFormData()
+  // await postFormData()
+  // await postUrlencoded()
+  // await postUrlencoded()
 }
 init()

@@ -65,8 +65,6 @@ export function useInterceptor(arg: UseInterceptorArg) {
 
   const debounceMap = new Map<string, {
     promise: Promise<AxiosResponse<unknown, unknown>>,
-    resolve: (value: unknown) => void,
-    reject: (reason?: unknown) => void
   }>()
 
   let requestId = 1
@@ -89,6 +87,7 @@ export function useInterceptor(arg: UseInterceptorArg) {
   const retryConfigs = new Set<AxiosRequestConfig>()
 
   axios.interceptors.request.use(config => {
+    // 重试时有_requestId
     if (config._requestId) {
       const realConfig = cloneDeep(config)
       newAxios.request(realConfig)
@@ -98,8 +97,11 @@ export function useInterceptor(arg: UseInterceptorArg) {
       }
       return config
     }
-    // 不带id的config
+
+    // 不带id的config，第一次请求
     const key = getKey(config)
+
+    // 有缓存直接读缓存
     if (useCache && config._cache) {
       const response = cacheMap.get(key)
       // 有缓存的话直接响应接口
@@ -110,22 +112,13 @@ export function useInterceptor(arg: UseInterceptorArg) {
     }
 
 
+    // 有去抖动直接读去抖动
+    const debounceValue = debounceMap.get(key)
     if (useDebounce && !config._noDebounce) {
-      const debounceValue = debounceMap.get(key)
       if (debounceValue) {
         // 有debounce直接返回debouncePromise
         config.adapter = () => debounceValue.promise
         return config
-      } else {
-        // 没有创建debouncePromise
-        let resolve
-        let reject
-        const promise = new Promise<AxiosResponse<unknown, unknown>>((res, rej) => {
-          resolve = res
-          reject = rej
-        })
-        if (resolve && reject)
-          debounceMap.set(key, { promise, reject, resolve })
       }
     }
 
@@ -137,6 +130,7 @@ export function useInterceptor(arg: UseInterceptorArg) {
     if (useTimestamp && realConfig.method?.toUpperCase() === 'GET') {
       realConfig.params ? (realConfig.params[timestampKey] = new Date().getTime()) : (realConfig.params = { [timestampKey]: new Date().getTime() })
     }
+
     // 发起真实请求
     newAxios.request(realConfig)
 
@@ -150,6 +144,13 @@ export function useInterceptor(arg: UseInterceptorArg) {
     // 添加真实请求队列
     if (resolve && reject)
       realMap.set(requestId, { promise, reject, resolve, config: realConfig })
+
+    // 需要去抖动，但没有往去抖动队列中加入
+    if (useDebounce && !config._noDebounce && !debounceValue) {
+      if (resolve && reject)
+        debounceMap.set(key, { promise })
+    }
+
     // 通知队列改变
     callRequestListChange()
     requestId++
@@ -158,10 +159,10 @@ export function useInterceptor(arg: UseInterceptorArg) {
     config.adapter = () => promise
     return config
   })
-  axios.interceptors.response.use(response => response, err => err)
 
   newAxios.interceptors.response.use(response => {
     const _requestId = response.config._requestId
+    // 带id的请求是拦截器发起的
     if (_requestId) {
       // 正常响应的数据也可以重新发起请求
       if (useRetry && response && isRetry(response)) {
@@ -175,7 +176,6 @@ export function useInterceptor(arg: UseInterceptorArg) {
         const debounceParams = debounceMap.get(key)
         // 响应debounce
         if (debounceParams) {
-          debounceParams.resolve(resolveResponse)
           debounceMap.delete(key)
         } else {
           console.log('找不到请求对应key')
@@ -227,7 +227,6 @@ export function useInterceptor(arg: UseInterceptorArg) {
       // 响应debounce
       const debounceParams = debounceMap.get(key)
       if (debounceParams) {
-        debounceParams.reject(resolveErr)
         debounceMap.delete(key)
       }
     }
