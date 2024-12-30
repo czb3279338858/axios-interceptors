@@ -158,6 +158,7 @@ export function useInterceptor(arg: UseInterceptorArg) {
     config.adapter = () => promise
     return config
   })
+  axios.interceptors.response.use(response => response, err => err)
 
   newAxios.interceptors.response.use(response => {
     const _requestId = response.config._requestId
